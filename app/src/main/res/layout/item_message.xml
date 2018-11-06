@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/receiveLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="@dimen/dimen_item_padding">
+
+        <RelativeLayout
+            android:layout_width="@dimen/dimen_zero"
+            android:layout_height="wrap_content"
+            android:layout_weight="9">
+
+            <ImageView
+                android:id="@+id/receiveImageView"
+                android:layout_width="@dimen/dimen_item_image_width"
+                android:layout_height="@dimen/dimen_item_image_height"
+                android:layout_alignParentTop="true"
+                android:src="@drawable/t01" />
+
+            <View
+                android:id="@+id/receiveView"
+                android:layout_width="@dimen/dimen_item_text_margin"
+                android:layout_height="match_parent"
+                android:layout_alignParentTop="true"
+                android:layout_toRightOf="@id/receiveImageView"/>
+            
+            <TextView
+                android:id="@+id/receiveText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_receive"
+                android:layout_alignParentTop="true"
+                android:layout_toRightOf="@id/receiveView"
+                android:paddingLeft="@dimen/dimen_item_text_lr_padding"
+                android:paddingRight="@dimen/dimen_item_text_lr_padding"
+                android:textColor="@color/colorText"
+                android:textSize="@dimen/dimen_item_text_size" />
+        </RelativeLayout>
+
+        <View
+            android:layout_width="@dimen/dimen_zero"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/sendLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="right"
+        android:orientation="horizontal"
+        android:padding="@dimen/dimen_item_padding">
+
+        <View
+            android:layout_width="@dimen/dimen_zero"
+            android:layout_height="match_parent"
+            android:layout_weight="1" />
+
+        <RelativeLayout
+            android:layout_width="@dimen/dimen_zero"
+            android:layout_height="wrap_content"
+            android:layout_weight="9">
+
+            <ImageView
+                android:id="@+id/sendImageView"
+                android:layout_width="@dimen/dimen_item_image_width"
+                android:layout_height="@dimen/dimen_item_image_height"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentTop="true"
+                android:src="@drawable/t02" />
+
+            <View
+                android:id="@+id/sendView"
+                android:layout_width="@dimen/dimen_item_text_margin"
+                android:layout_height="match_parent"
+                android:layout_alignParentTop="true"
+                android:layout_toLeftOf="@id/sendImageView"/>
+
+            <TextView
+                android:id="@+id/sendText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_send"
+                android:layout_alignParentTop="true"
+                android:layout_toLeftOf="@id/sendView"
+                android:paddingLeft="@dimen/dimen_item_text_lr_padding"
+                android:paddingRight="@dimen/dimen_item_text_lr_padding"
+                android:textColor="@color/colorText"
+                android:textSize="@dimen/dimen_item_text_size" />
+        </RelativeLayout>
+    </LinearLayout>
+
+</LinearLayout>

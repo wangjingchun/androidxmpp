@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/parent"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.wjc.message.MainActivity">
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dimen_zero"
+        android:layout_weight="1"
+        android:background="@color/colorBgMain" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/colorWhite"
+        android:orientation="horizontal"
+        android:paddingBottom="@dimen/dimen_send_tb_padding"
+        android:paddingLeft="@dimen/dimen_send_lr_padding"
+        android:paddingRight="@dimen/dimen_send_lr_padding"
+        android:paddingTop="@dimen/dimen_send_tb_padding">
+
+        <LinearLayout
+            android:layout_width="@dimen/dimen_zero"
+            android:layout_height="@dimen/dimen_send_height"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <EditText
+                android:id="@+id/messageEditText"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dimen_zero"
+                android:layout_weight="1"
+                android:background="@null"
+                android:textColorHint="@color/colorText" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dimen_send_line"
+                android:background="@color/colorPink" />
+        </LinearLayout>
+
+        <View
+            android:layout_width="@dimen/dimen_send_button_margin"
+            android:layout_height="@dimen/dimen_send_height" />
+
+        <ImageView
+            android:id="@+id/emojiImageView"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/icon_emoji_black" />
+
+        <View
+            android:layout_width="@dimen/dimen_send_button_margin"
+            android:layout_height="@dimen/dimen_send_height" />
+
+        <Button
+            android:id="@+id/sendButton"
+            android:layout_width="@dimen/dimen_send_button_width"
+            android:layout_height="@dimen/dimen_send_button_height"
+            android:background="@drawable/shape_send_button"
+            android:minHeight="@dimen/dimen_zero"
+            android:minWidth="@dimen/dimen_zero"
+            android:text="@string/send"
+            android:textColor="@color/colorWhite" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/emojiLinearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:paddingBottom="5dp"
+        android:paddingTop="5dp"
+        android:visibility="gone">
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/emojiRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+
+</LinearLayout>

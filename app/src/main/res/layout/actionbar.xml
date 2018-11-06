@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="?attr/actionBarSize"
+    android:background="@color/colorPink">
+
+    <View
+        android:id="@+id/actionBarView"
+        android:layout_width="10dp"
+        android:layout_height="match_parent" />
+
+    <ImageView
+        android:id="@+id/actionbarBack"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_centerVertical="true"
+        android:layout_toRightOf="@id/actionBarView"
+        android:src="@drawable/icon_back_white" />
+
+    <TextView
+        android:id="@+id/actionBarTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:gravity="center"
+        android:textColor="@color/colorWhite"
+        android:textSize="18sp" />
+
+</RelativeLayout>
