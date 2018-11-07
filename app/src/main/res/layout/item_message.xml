@@ -28,19 +28,28 @@
                 android:layout_width="@dimen/dimen_item_text_margin"
                 android:layout_height="match_parent"
                 android:layout_alignParentTop="true"
-                android:layout_toRightOf="@id/receiveImageView"/>
-            
+                android:layout_toRightOf="@id/receiveImageView" />
+
             <TextView
                 android:id="@+id/receiveText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_receive"
                 android:layout_alignParentTop="true"
                 android:layout_toRightOf="@id/receiveView"
+                android:background="@drawable/bg_receive"
                 android:paddingLeft="@dimen/dimen_item_text_lr_padding"
                 android:paddingRight="@dimen/dimen_item_text_lr_padding"
                 android:textColor="@color/colorText"
                 android:textSize="@dimen/dimen_item_text_size" />
+
+            <ImageView
+                android:id="@+id/receiveImage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_toRightOf="@id/receiveView"
+                android:adjustViewBounds="true"
+                android:visibility="gone" />
         </RelativeLayout>
 
         <View
@@ -80,19 +89,28 @@
                 android:layout_width="@dimen/dimen_item_text_margin"
                 android:layout_height="match_parent"
                 android:layout_alignParentTop="true"
-                android:layout_toLeftOf="@id/sendImageView"/>
+                android:layout_toLeftOf="@id/sendImageView" />
 
             <TextView
                 android:id="@+id/sendText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_send"
                 android:layout_alignParentTop="true"
                 android:layout_toLeftOf="@id/sendView"
+                android:background="@drawable/bg_send"
                 android:paddingLeft="@dimen/dimen_item_text_lr_padding"
                 android:paddingRight="@dimen/dimen_item_text_lr_padding"
                 android:textColor="@color/colorText"
                 android:textSize="@dimen/dimen_item_text_size" />
+
+            <ImageView
+                android:id="@+id/sendImage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_toLeftOf="@id/sendView"
+                android:adjustViewBounds="true"
+                android:visibility="gone" />
         </RelativeLayout>
     </LinearLayout>
 

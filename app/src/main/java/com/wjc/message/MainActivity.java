@@ -1,13 +1,18 @@
 package com.wjc.message;
 
+import android.Manifest;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -26,6 +31,7 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.wjc.message.adapter.EmojiRecyclerViewAdapter;
 import com.wjc.message.adapter.MessageRecyclerViewAdapter;
@@ -41,7 +47,13 @@ import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
+import org.jivesoftware.smackx.filetransfer.FileTransferListener;
+import org.jivesoftware.smackx.filetransfer.FileTransferManager;
+import org.jivesoftware.smackx.filetransfer.FileTransferRequest;
+import org.jivesoftware.smackx.filetransfer.IncomingFileTransfer;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -55,6 +67,7 @@ public class MainActivity extends AppCompatActivity {
 
     private XMPPTCPConnection connection;
     private ChatManager chatManager;
+    private FileTransferManager transferManager;
 
     private Handler handler;
 
@@ -76,6 +89,12 @@ public class MainActivity extends AppCompatActivity {
     private EmojiRecyclerViewAdapter emojiAdapter;
 
     private AssetManager assetManager;
+
+    private final int WHAT_RECEIVE = 2;
+    private final String BASE64_IMAGE_TAG = "base64_image:nt52S6^Ng#dnzUj%BbDMu8qsv7&$LknK:base64_image";
+
+    private EditText sendImageText;
+    private Button sendImageButton;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +125,16 @@ public class MainActivity extends AppCompatActivity {
 
         setComponentView();
         setKeyboard();
+
+
+        sendImageText = (EditText) findViewById(R.id.sendImageText);
+        sendImageButton = (Button) findViewById(R.id.sendImageButton);
+        sendImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                sendImage();
+            }
+        });
     }
 
     private void setComponentView() {
@@ -210,33 +239,40 @@ public class MainActivity extends AppCompatActivity {
 
         handler = new Handler() {
             public void handleMessage(android.os.Message msg) {
-                if (msg.what == 2) {
+                if (msg.what == WHAT_RECEIVE) {
                     Bundle bundle = msg.getData();
 
                     String html = bundle.getString("text");
+                    if (html.indexOf(BASE64_IMAGE_TAG) == -1) {
+                        CharSequence charSequence = Html.fromHtml(html, new Html.ImageGetter() {
+                            @Override
+                            public Drawable getDrawable(String source) {
+                                Drawable drawable = null;
+                                try {
+                                    InputStream inputStream = assetManager.open(source);
+                                    Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                                    BitmapDrawable bitmapDrawable = new BitmapDrawable(bitmap);
+                                    drawable = (Drawable) bitmapDrawable;
+                                    drawable.setBounds(0, 0, 80, 80);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
 
-                    CharSequence charSequence = Html.fromHtml(html, new Html.ImageGetter() {
-                        @Override
-                        public Drawable getDrawable(String source) {
-                            Drawable drawable = null;
-                            try {
-                                InputStream inputStream = assetManager.open(source);
-                                Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-                                BitmapDrawable bitmapDrawable = new BitmapDrawable(bitmap);
-                                drawable = (Drawable) bitmapDrawable;
-                                drawable.setBounds(0, 0, 80, 80);
-                            } catch (IOException e) {
-                                e.printStackTrace();
+                                return drawable;
                             }
-
-                            return drawable;
-                        }
-                    }, null);
+                        }, null);
 
 
-                    list.add(new MessageText(bundle.getInt("type"), charSequence));
-                    adapter.notifyDataSetChanged();
-                    recyclerView.scrollToPosition(adapter.getItemCount() - 1);
+                        list.add(new MessageText(bundle.getInt("type"), charSequence));
+                        adapter.notifyDataSetChanged();
+                        recyclerView.scrollToPosition(adapter.getItemCount() - 1);
+                    } else {
+                        html = html.replace(BASE64_IMAGE_TAG, "");
+
+                        list.add(new MessageText(bundle.getInt("type"), null, html));
+                        adapter.notifyDataSetChanged();
+                        recyclerView.scrollToPosition(adapter.getItemCount() - 1);
+                    }
                 }
                 super.handleMessage(msg);
             }
@@ -313,7 +349,7 @@ public class MainActivity extends AppCompatActivity {
                                     String messageBody = message.getBody();
 
                                     android.os.Message msg = new android.os.Message();
-                                    msg.what = 2;
+                                    msg.what = WHAT_RECEIVE;
                                     Bundle bundle = new Bundle();
                                     bundle.putInt("type", 2);
                                     bundle.putString("text", messageBody);
@@ -322,6 +358,23 @@ public class MainActivity extends AppCompatActivity {
                                     handler.sendMessage(msg);
                                 }
                             });
+                        }
+                    });
+
+                    transferManager = FileTransferManager.getInstanceFor(connection);
+                    transferManager.addFileTransferListener(new FileTransferListener() {
+                        @Override
+                        public void fileTransferRequest(FileTransferRequest fileTransferRequest) {
+                            IncomingFileTransfer incomingTransfer = fileTransferRequest.accept();
+                            String filename = incomingTransfer.getFileName();
+                            File file = new File(filename);
+                            try {
+                                incomingTransfer.recieveFile(file);
+                            } catch (SmackException e) {
+                                e.printStackTrace();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
                         }
                     });
                 } catch (Exception e) {
@@ -348,6 +401,35 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void sendImage() {
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+        } else {
+            String path = sendImageText.getText().toString();
+            if (path.trim() == "") {
+                return;
+            }
+            File file = new File(path);
+            try {
+                FileInputStream inputStream = new FileInputStream(file);
+                byte[] data = new byte[inputStream.available()];
+                inputStream.read(data);
+                inputStream.close();
+
+                String string = android.util.Base64.encodeToString(data, 0);
+
+                Chat chat = chatManager.createChat("wsh@" + SERVER_NAME);
+                chat.sendMessage(string + BASE64_IMAGE_TAG);
+
+                list.add(new MessageText(1, null, string));
+                adapter.notifyDataSetChanged();
+                recyclerView.scrollToPosition(adapter.getItemCount() - 1);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private boolean isKeyboardShow() {
         boolean isKeyboardShow = false;
 
@@ -360,6 +442,16 @@ public class MainActivity extends AppCompatActivity {
         return isKeyboardShow;
     }
 
-
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 1) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) { //同意权限申请
+                sendImage();
+            } else {
+                Toast.makeText(MainActivity.this, "权限被拒绝了", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
 }
 

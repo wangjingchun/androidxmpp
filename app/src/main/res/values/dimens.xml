@@ -11,7 +11,7 @@
     <dimen name="dimen_send_button_height">30dp</dimen>
     <dimen name="dimen_send_button_margin">5dp</dimen>
 
-    <dimen name="dimen_item_padding">5dp</dimen>
+    <dimen name="dimen_item_padding">10dp</dimen>
     <dimen name="dimen_item_image_width">40dp</dimen>
     <dimen name="dimen_item_image_height">40dp</dimen>
     <dimen name="dimen_item_text_margin">5dp</dimen>
