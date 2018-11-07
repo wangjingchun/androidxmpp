@@ -16,7 +16,6 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.Html;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
@@ -164,25 +163,36 @@ public class MainActivity extends AppCompatActivity {
                     InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
                     inputMethodManager.hideSoftInputFromWindow(messageEditText.getWindowToken(), 0);
                     getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
-                }
 
-                if (emojiLinearLayout.getVisibility() == View.GONE) {
                     new Handler().postDelayed(new Runnable() {
                         @Override
                         public void run() {
                             SharedPreferences preferences = getSharedPreferences("keyboard_height", MODE_PRIVATE);
-                            int dp = preferences.getInt("keyboard_height", 0);
-                            if (dp != 0) {
-                                emojiLinearLayout.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp));
+                            int px = preferences.getInt("keyboard_height", 0);
+                            if (px != 0) {
+                                ViewGroup.LayoutParams layoutParams = emojiLinearLayout.getLayoutParams();
+                                layoutParams.height = px;
                             }
 
                             emojiLinearLayout.setVisibility(View.VISIBLE);
                             emojiImageView.setImageResource(R.drawable.icon_emoji_pink);
                         }
-                    }, 100);
+                    }, 60);
                 } else {
-                    emojiLinearLayout.setVisibility(View.GONE);
-                    emojiImageView.setImageResource(R.drawable.icon_emoji_black);
+                    if (emojiLinearLayout.getVisibility() == View.GONE) {
+                        SharedPreferences preferences = getSharedPreferences("keyboard_height", MODE_PRIVATE);
+                        int px = preferences.getInt("keyboard_height", 0);
+                        if (px != 0) {
+                            ViewGroup.LayoutParams layoutParams = emojiLinearLayout.getLayoutParams();
+                            layoutParams.height = px;
+                        }
+
+                        emojiLinearLayout.setVisibility(View.VISIBLE);
+                        emojiImageView.setImageResource(R.drawable.icon_emoji_pink);
+                    } else {
+                        emojiLinearLayout.setVisibility(View.GONE);
+                        emojiImageView.setImageResource(R.drawable.icon_emoji_black);
+                    }
                 }
             }
         });
@@ -239,24 +249,30 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onGlobalLayout() {
                 int heightDiff = activityRootView.getRootView().getHeight() - activityRootView.getHeight();
+
+                SharedPreferences preferences = getSharedPreferences("keyboard_height", MODE_PRIVATE);
+
                 if (heightDiff > Utils.dp2px(MainActivity.this, 200)) {
                     if (emojiLinearLayout.getVisibility() == View.VISIBLE) {
                         emojiLinearLayout.setVisibility(View.GONE);
                         emojiImageView.setImageResource(R.drawable.icon_emoji_black);
                     }
 
-                    SharedPreferences preferences = getSharedPreferences("keyboard_height", MODE_PRIVATE);
-                    int aa = preferences.getInt("keyboard_height", 0);
-                    if (aa == 0) {
-                        int px = Utils.getKeyboardHeight(MainActivity.this);
-                        //int dp = Utils.px2dp(MainActivity.this, px);
+                    int oldHeight = preferences.getInt("keyboard_height", 0);
+                    if (oldHeight == 0) {
+                        int hideHeight = preferences.getInt("hide_height", 0);
+                        if (hideHeight != 0) {
+                            int keyboardHeight = heightDiff - hideHeight;
 
-                        SharedPreferences.Editor editor = preferences.edit();
-                        editor.putInt("keyboard_height", px);
-                        editor.commit();
-
-                        Log.i("TAG", String.valueOf(px));
+                            SharedPreferences.Editor editor = preferences.edit();
+                            editor.putInt("keyboard_height", keyboardHeight);
+                            editor.commit();
+                        }
                     }
+                } else {
+                    SharedPreferences.Editor editor = preferences.edit();
+                    editor.putInt("hide_height", heightDiff);
+                    editor.commit();
                 }
             }
         });

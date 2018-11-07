@@ -1,14 +1,12 @@
 package com.wjc.message.util;
 
 import android.content.Context;
+import android.content.res.Resources;
 import android.util.DisplayMetrics;
-import android.util.TypedValue;
-import android.view.Display;
 import android.view.WindowManager;
 
 import com.wjc.message.dao.Emoji;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -105,7 +103,7 @@ public class Utils {
     }
 
     /*
-     * 像素转dp
+     * px转dp
      */
     public static int px2dp(Context context, float pxValue) {
         float scale = context.getResources().getDisplayMetrics().density;
@@ -113,53 +111,58 @@ public class Utils {
     }
 
     /*
-     * dp转像素
+     * dp转px
      */
-    public static float dp2px(Context context, float valueInDp) {
-        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
-        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, valueInDp, metrics);
+    public static int dp2px(Context context, float dpValue) {
+        float scale = context.getResources().getDisplayMetrics().density;
+        return (int) (dpValue * scale + 0.5f);
     }
-
 
     /*
      * 获取屏幕高度
      */
-    public static int getScreenDPI(Context context) {
-        int dpi = 0;
+    public static int getScreenHeight(Context context) {
         WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        Display display = windowManager.getDefaultDisplay();
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        Class c;
-        try {
-            c = Class.forName("android.view.Display");
-            Method method = c.getMethod("getRealMetrics", DisplayMetrics.class);
-            method.invoke(display, displayMetrics);
-            dpi = displayMetrics.heightPixels;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
 
-        return dpi;
+        DisplayMetrics metrics = new DisplayMetrics();
+        windowManager.getDefaultDisplay().getMetrics(metrics);
+        return metrics.heightPixels;
+
+        /*
+        Point point = new Point();
+        windowManager.getDefaultDisplay().getSize(point);
+        return point.y;
+        */
     }
 
     /*
-     * 获取底部虚拟键盘高度
+     * 获取状态栏高度
      */
-    public static int getScreenHeight(Context context) {
-        WindowManager windowManager = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        DisplayMetrics out = new DisplayMetrics();
-        windowManager.getDefaultDisplay().getMetrics(out);
+    public static int getStatusBarHeight(Context context) {
+        int height = 0;
+        int resourceId = context.getResources().getIdentifier("status_bar_height", "dimen", "android");
+        if (resourceId > 0) {
+            height = context.getResources().getDimensionPixelSize(resourceId);
+        }
 
-        return out.heightPixels;
+        return height;
     }
 
     /*
      * 获取虚拟键盘高度
      */
-    public static int getKeyboardHeight(Context context) {
-        int totalHeight = getScreenDPI(context);
-        int contentHeight = getScreenHeight(context);
-        return totalHeight - contentHeight;
+    public static int getNavigationBarHeight(Context context) {
+        int height = 0;
+        Resources resources = context.getResources();
+        int resourceId = resources.getIdentifier("config_showNavigationBar", "bool", "android");
+        if (resourceId > 0) {
+            int resId = resources.getIdentifier("navigation_bar_height", "dimen", "android");
+            if (resId > 0) {
+                height = resources.getDimensionPixelSize(resId);
+            }
+        }
+
+        return height;
     }
 
 
