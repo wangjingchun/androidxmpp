@@ -9,7 +9,7 @@
     <dimen name="dimen_send_line">1dp</dimen>
     <dimen name="dimen_send_button_width">50dp</dimen>
     <dimen name="dimen_send_button_height">30dp</dimen>
-    <dimen name="dimen_send_button_margin">5dp</dimen>
+    <dimen name="dimen_send_button_margin">10dp</dimen>
 
     <dimen name="dimen_item_padding">10dp</dimen>
     <dimen name="dimen_item_image_width">40dp</dimen>
@@ -17,5 +17,7 @@
     <dimen name="dimen_item_text_margin">5dp</dimen>
     <dimen name="dimen_item_text_lr_padding">10dp</dimen>
     <dimen name="dimen_item_text_size">16sp</dimen>
+
+    <dimen name="grid_expected_size">100dp</dimen>
 
 </resources>

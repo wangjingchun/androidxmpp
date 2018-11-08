@@ -58,6 +58,16 @@
             android:layout_width="@dimen/dimen_send_button_margin"
             android:layout_height="@dimen/dimen_send_height" />
 
+        <ImageView
+            android:id="@+id/imageImageView"
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:src="@drawable/icon_image_black" />
+
+        <View
+            android:layout_width="@dimen/dimen_send_button_margin"
+            android:layout_height="@dimen/dimen_send_height" />
+
         <Button
             android:id="@+id/sendButton"
             android:layout_width="@dimen/dimen_send_button_width"
@@ -81,26 +91,6 @@
             android:id="@+id/emojiRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <EditText
-            android:id="@+id/sendImageText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="top"
-            android:minLines="3"
-            android:hint="输入图片路径"/>
-
-        <Button
-            android:id="@+id/sendImageButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="send image" />
     </LinearLayout>
 
 

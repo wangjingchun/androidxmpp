@@ -2,15 +2,19 @@ package com.wjc.message;
 
 import android.Manifest;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
@@ -31,13 +35,15 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.wjc.message.adapter.EmojiRecyclerViewAdapter;
 import com.wjc.message.adapter.MessageRecyclerViewAdapter;
 import com.wjc.message.dao.Emoji;
 import com.wjc.message.dao.MessageText;
 import com.wjc.message.util.Utils;
+import com.zhihu.matisse.Matisse;
+import com.zhihu.matisse.MimeType;
+import com.zhihu.matisse.engine.impl.GlideEngine;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.chat.Chat;
@@ -78,6 +84,7 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private EditText messageEditText;
     private ImageView emojiImageView;
+    private ImageView imageImageView;
     private Button sendButton;
     private LinearLayout emojiLinearLayout;
     private RecyclerView emojiRecyclerView;
@@ -93,8 +100,8 @@ public class MainActivity extends AppCompatActivity {
     private final int WHAT_RECEIVE = 2;
     private final String BASE64_IMAGE_TAG = "base64_image:nt52S6^Ng#dnzUj%BbDMu8qsv7&$LknK:base64_image";
 
-    private EditText sendImageText;
-    private Button sendImageButton;
+    private final String USER_ID = "wjc";
+    private final String SEND_ID = "wsh";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -118,23 +125,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         actionBarTextView = (TextView) actionBarView.findViewById(R.id.actionBarTextView);
-        actionBarTextView.setText("wsh");
+        actionBarTextView.setText(SEND_ID);
 
         assetManager = getResources().getAssets();
 
 
         setComponentView();
         setKeyboard();
-
-
-        sendImageText = (EditText) findViewById(R.id.sendImageText);
-        sendImageButton = (Button) findViewById(R.id.sendImageButton);
-        sendImageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                sendImage();
-            }
-        });
+        setRequestPermissions();
     }
 
     private void setComponentView() {
@@ -226,6 +224,23 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        imageImageView = (ImageView) findViewById(R.id.imageImageView);
+        imageImageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Matisse.from(MainActivity.this)
+                        .choose(MimeType.allOf()) // 选择 mime 的类型
+                        .countable(true)
+                        .maxSelectable(1) // 图片选择的最多数量
+                        .gridExpectedSize(getResources().getDimensionPixelSize(R.dimen.grid_expected_size))
+                        .restrictOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED)
+                        .thumbnailScale(0.85f) // 缩略图的比例
+                        .imageEngine(new GlideEngine()) // 使用的图片加载引擎
+                        .theme(R.style.PickerTheme)
+                        .forResult(1000); // 设置作为标记的请求码
+            }
+        });
+
         sendButton = (Button) findViewById(R.id.sendButton);
         sendButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -234,7 +249,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        login("wjc", "666666");
+        login(USER_ID, "666666");
 
 
         handler = new Handler() {
@@ -314,6 +329,15 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void setRequestPermissions() {
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
+        }
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
+        }
+    }
+
     private void login(final String userName, final String password) {
         new Thread(new Runnable() {
             @Override
@@ -385,7 +409,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void sendText() {
-        Chat chat = chatManager.createChat("wsh@" + SERVER_NAME);
+        Chat chat = chatManager.createChat(SEND_ID + "@" + SERVER_NAME);
         try {
             Editable editable = messageEditText.getText();
             String html = Html.toHtml(editable).replace("<p dir=\"ltr\">", "").replace("</p>", "");
@@ -401,32 +425,24 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void sendImage() {
-        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
-        } else {
-            String path = sendImageText.getText().toString();
-            if (path.trim() == "") {
-                return;
-            }
-            File file = new File(path);
-            try {
-                FileInputStream inputStream = new FileInputStream(file);
-                byte[] data = new byte[inputStream.available()];
-                inputStream.read(data);
-                inputStream.close();
+    private void sendImage(String path) {
+        File file = new File(path);
+        try {
+            FileInputStream inputStream = new FileInputStream(file);
+            byte[] data = new byte[inputStream.available()];
+            inputStream.read(data);
+            inputStream.close();
 
-                String string = android.util.Base64.encodeToString(data, 0);
+            String string = android.util.Base64.encodeToString(data, 0);
 
-                Chat chat = chatManager.createChat("wsh@" + SERVER_NAME);
-                chat.sendMessage(string + BASE64_IMAGE_TAG);
+            Chat chat = chatManager.createChat(SEND_ID + "@" + SERVER_NAME);
+            chat.sendMessage(string + BASE64_IMAGE_TAG);
 
-                list.add(new MessageText(1, null, string));
-                adapter.notifyDataSetChanged();
-                recyclerView.scrollToPosition(adapter.getItemCount() - 1);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            list.add(new MessageText(1, null, string));
+            adapter.notifyDataSetChanged();
+            recyclerView.scrollToPosition(adapter.getItemCount() - 1);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -445,12 +461,17 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 1) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) { //同意权限申请
-                sendImage();
-            } else {
-                Toast.makeText(MainActivity.this, "权限被拒绝了", Toast.LENGTH_LONG).show();
-            }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1000 && resultCode == RESULT_OK) {
+            List<Uri> list = Matisse.obtainResult(data);
+
+            String path = Utils.getRealPathFromUri(MainActivity.this, list.get(0));
+
+            sendImage(path);
         }
     }
 }
