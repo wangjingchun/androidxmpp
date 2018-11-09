@@ -1,8 +1,10 @@
 package com.wjc.message;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
@@ -40,6 +42,8 @@ import com.wjc.message.adapter.EmojiRecyclerViewAdapter;
 import com.wjc.message.adapter.MessageRecyclerViewAdapter;
 import com.wjc.message.dao.Emoji;
 import com.wjc.message.dao.MessageText;
+import com.wjc.message.service.ImService;
+import com.wjc.message.util.Config;
 import com.wjc.message.util.Utils;
 import com.zhihu.matisse.Matisse;
 import com.zhihu.matisse.MimeType;
@@ -53,10 +57,6 @@ import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
 import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
-import org.jivesoftware.smackx.filetransfer.FileTransferListener;
-import org.jivesoftware.smackx.filetransfer.FileTransferManager;
-import org.jivesoftware.smackx.filetransfer.FileTransferRequest;
-import org.jivesoftware.smackx.filetransfer.IncomingFileTransfer;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -67,13 +67,15 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static String ACTIVITY_ACTION = "ACTIVITY_ACTION";
+    private static String SERVICE_ACTION = "SERVICE_ACTION";
+
     public static final String SERVER_IP = "47.98.53.86";
     public static final int PORT = 5222;
     public static final String SERVER_NAME = "iZbp14vtdec3c85k11gn6tZ";
 
     private XMPPTCPConnection connection;
     private ChatManager chatManager;
-    private FileTransferManager transferManager;
 
     private Handler handler;
 
@@ -96,6 +98,8 @@ public class MainActivity extends AppCompatActivity {
     private EmojiRecyclerViewAdapter emojiAdapter;
 
     private AssetManager assetManager;
+
+    private String path;
 
     private final int WHAT_RECEIVE = 2;
     private final String BASE64_IMAGE_TAG = "base64_image:nt52S6^Ng#dnzUj%BbDMu8qsv7&$LknK:base64_image";
@@ -132,7 +136,9 @@ public class MainActivity extends AppCompatActivity {
 
         setComponentView();
         setKeyboard();
+        setBroadcastReceiver();
         setRequestPermissions();
+        startService(new Intent(MainActivity.this, ImService.class));
     }
 
     private void setComponentView() {
@@ -254,7 +260,7 @@ public class MainActivity extends AppCompatActivity {
 
         handler = new Handler() {
             public void handleMessage(android.os.Message msg) {
-                if (msg.what == WHAT_RECEIVE) {
+                if (msg.what == Config.WHAT_RECEIVE) {
                     Bundle bundle = msg.getData();
 
                     String html = bundle.getString("text");
@@ -329,6 +335,12 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    private void setBroadcastReceiver() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(ACTIVITY_ACTION);
+        registerReceiver(receiver, intentFilter);
+    }
+
     private void setRequestPermissions() {
         if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(MainActivity.this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 1);
@@ -339,6 +351,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void login(final String userName, final String password) {
+        Bundle bundle = new Bundle();
+        bundle.putString("action", "login");
+        bundle.putString("userName", userName);
+        bundle.putString("password", password);
+
+        Intent intent = new Intent();
+        intent.setAction(SERVICE_ACTION);
+        intent.putExtras(bundle);
+        sendBroadcast(intent);
+
+        /*
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -384,31 +407,29 @@ public class MainActivity extends AppCompatActivity {
                             });
                         }
                     });
-
-                    transferManager = FileTransferManager.getInstanceFor(connection);
-                    transferManager.addFileTransferListener(new FileTransferListener() {
-                        @Override
-                        public void fileTransferRequest(FileTransferRequest fileTransferRequest) {
-                            IncomingFileTransfer incomingTransfer = fileTransferRequest.accept();
-                            String filename = incomingTransfer.getFileName();
-                            File file = new File(filename);
-                            try {
-                                incomingTransfer.recieveFile(file);
-                            } catch (SmackException e) {
-                                e.printStackTrace();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    });
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }).start();
+        */
     }
 
     private void sendText() {
+        Editable editable = messageEditText.getText();
+        String html = Html.toHtml(editable).replace("<p dir=\"ltr\">", "").replace("</p>", "");
+
+        Bundle bundle = new Bundle();
+        bundle.putString("action", "send_text");
+        bundle.putString("sendId", SEND_ID);
+        bundle.putString("html", html);
+
+        Intent intent = new Intent();
+        intent.setAction(SERVICE_ACTION);
+        intent.putExtras(bundle);
+        sendBroadcast(intent);
+
+        /*
         Chat chat = chatManager.createChat(SEND_ID + "@" + SERVER_NAME);
         try {
             Editable editable = messageEditText.getText();
@@ -423,9 +444,21 @@ public class MainActivity extends AppCompatActivity {
         } catch (SmackException.NotConnectedException e) {
             e.printStackTrace();
         }
+        */
     }
 
     private void sendImage(String path) {
+        Bundle bundle = new Bundle();
+        bundle.putString("action", "send_image");
+        bundle.putString("sendId", SEND_ID);
+        bundle.putString("path", path);
+
+        Intent intent = new Intent();
+        intent.setAction(SERVICE_ACTION);
+        intent.putExtras(bundle);
+        sendBroadcast(intent);
+
+        /*
         File file = new File(path);
         try {
             FileInputStream inputStream = new FileInputStream(file);
@@ -444,6 +477,7 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        */
     }
 
     private boolean isKeyboardShow() {
@@ -474,5 +508,48 @@ public class MainActivity extends AppCompatActivity {
             sendImage(path);
         }
     }
+
+    BroadcastReceiver receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Bundle bundle = intent.getExtras();
+
+            String action = bundle.getString("action");
+            if (action == "send_text_ok") {
+                Editable editable = messageEditText.getText();
+
+                list.add(new MessageText(1, editable));
+                adapter.notifyDataSetChanged();
+                recyclerView.scrollToPosition(adapter.getItemCount() - 1);
+                messageEditText.setText("");
+            } else if (action == "send_image_ok") {
+                File file = new File(path);
+                try {
+                    FileInputStream inputStream = new FileInputStream(file);
+                    byte[] data = new byte[inputStream.available()];
+                    inputStream.read(data);
+                    inputStream.close();
+
+                    String string = android.util.Base64.encodeToString(data, 0);
+
+                    list.add(new MessageText(1, null, string));
+                    adapter.notifyDataSetChanged();
+                    recyclerView.scrollToPosition(adapter.getItemCount() - 1);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            } else if (action == "receive_ok") {
+                android.os.Message msg = new android.os.Message();
+                msg.what = Config.WHAT_RECEIVE;
+
+                Bundle newBundle = new Bundle();
+                newBundle.putInt("type", bundle.getInt("type"));
+                newBundle.putString("text", bundle.getString("text"));
+
+                msg.setData(newBundle);
+                handler.sendMessage(msg);
+            }
+        }
+    };
 }
 
