@@ -55,8 +55,6 @@ import org.jivesoftware.smack.chat.ChatManager;
 import org.jivesoftware.smack.chat.ChatManagerListener;
 import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.tcp.XMPPTCPConnection;
-import org.jivesoftware.smack.tcp.XMPPTCPConnectionConfiguration;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -68,14 +66,6 @@ import java.util.List;
 public class MainActivity extends AppCompatActivity {
 
     private static String ACTIVITY_ACTION = "ACTIVITY_ACTION";
-    private static String SERVICE_ACTION = "SERVICE_ACTION";
-
-    public static final String SERVER_IP = "47.98.53.86";
-    public static final int PORT = 5222;
-    public static final String SERVER_NAME = "iZbp14vtdec3c85k11gn6tZ";
-
-    private XMPPTCPConnection connection;
-    private ChatManager chatManager;
 
     private Handler handler;
 
@@ -99,13 +89,10 @@ public class MainActivity extends AppCompatActivity {
 
     private AssetManager assetManager;
 
-    private String path;
+    public static ChatManager chatManager;
 
-    private final int WHAT_RECEIVE = 2;
-    private final String BASE64_IMAGE_TAG = "base64_image:nt52S6^Ng#dnzUj%BbDMu8qsv7&$LknK:base64_image";
-
-    private final String USER_ID = "wjc";
-    private final String SEND_ID = "wsh";
+    private final String USER_ID = "wsh";
+    private final String SEND_ID = "wjc";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -138,7 +125,13 @@ public class MainActivity extends AppCompatActivity {
         setKeyboard();
         setBroadcastReceiver();
         setRequestPermissions();
-        startService(new Intent(MainActivity.this, ImService.class));
+
+        Intent serviceIntent = new Intent(MainActivity.this, ImService.class);
+        Bundle serviceBundle = new Bundle();
+        serviceBundle.putString("userName", USER_ID);
+        serviceBundle.putString("password", "666666");
+        serviceIntent.putExtras(serviceBundle);
+        startService(serviceIntent);
     }
 
     private void setComponentView() {
@@ -255,8 +248,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        login(USER_ID, "666666");
-
 
         handler = new Handler() {
             public void handleMessage(android.os.Message msg) {
@@ -264,7 +255,7 @@ public class MainActivity extends AppCompatActivity {
                     Bundle bundle = msg.getData();
 
                     String html = bundle.getString("text");
-                    if (html.indexOf(BASE64_IMAGE_TAG) == -1) {
+                    if (html.indexOf(Config.BASE64_IMAGE_TAG) == -1) {
                         CharSequence charSequence = Html.fromHtml(html, new Html.ImageGetter() {
                             @Override
                             public Drawable getDrawable(String source) {
@@ -288,7 +279,7 @@ public class MainActivity extends AppCompatActivity {
                         adapter.notifyDataSetChanged();
                         recyclerView.scrollToPosition(adapter.getItemCount() - 1);
                     } else {
-                        html = html.replace(BASE64_IMAGE_TAG, "");
+                        html = html.replace(Config.BASE64_IMAGE_TAG, "");
 
                         list.add(new MessageText(bundle.getInt("type"), null, html));
                         adapter.notifyDataSetChanged();
@@ -350,93 +341,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void login(final String userName, final String password) {
-        Bundle bundle = new Bundle();
-        bundle.putString("action", "login");
-        bundle.putString("userName", userName);
-        bundle.putString("password", password);
-
-        Intent intent = new Intent();
-        intent.setAction(SERVICE_ACTION);
-        intent.putExtras(bundle);
-        sendBroadcast(intent);
-
-        /*
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    XMPPTCPConnectionConfiguration config = XMPPTCPConnectionConfiguration.builder()
-                            .setHost(SERVER_IP)//服务器IP地址
-                            //服务器端口
-                            .setPort(PORT)
-                            //设置登录状态
-                            .setSendPresence(false)
-                            //服务器名称
-                            .setServiceName(SERVER_NAME)
-                            //是否开启安全模式
-                            .setSecurityMode(XMPPTCPConnectionConfiguration.SecurityMode.disabled)
-                            //是否开启压缩
-                            .setCompressionEnabled(false)
-                            //开启调试模式
-                            .setDebuggerEnabled(true)
-                            .setSendPresence(true)
-                            .build();
-                    connection = new XMPPTCPConnection(config);
-                    connection.connect();
-                    connection.login(userName, password);
-
-                    chatManager = ChatManager.getInstanceFor(connection);
-                    chatManager.addChatListener(new ChatManagerListener() {
-                        @Override
-                        public void chatCreated(Chat chat, boolean b) {
-                            chat.addMessageListener(new ChatMessageListener() {
-                                @Override
-                                public void processMessage(Chat chat, Message message) {
-                                    String messageBody = message.getBody();
-
-                                    android.os.Message msg = new android.os.Message();
-                                    msg.what = WHAT_RECEIVE;
-                                    Bundle bundle = new Bundle();
-                                    bundle.putInt("type", 2);
-                                    bundle.putString("text", messageBody);
-                                    msg.setData(bundle);
-
-                                    handler.sendMessage(msg);
-                                }
-                            });
-                        }
-                    });
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
-        */
-    }
-
     private void sendText() {
-        Editable editable = messageEditText.getText();
-        String html = Html.toHtml(editable).replace("<p dir=\"ltr\">", "").replace("</p>", "");
-
-        Bundle bundle = new Bundle();
-        bundle.putString("action", "send_text");
-        bundle.putString("sendId", SEND_ID);
-        bundle.putString("html", html);
-
-        Intent intent = new Intent();
-        intent.setAction(SERVICE_ACTION);
-        intent.putExtras(bundle);
-        sendBroadcast(intent);
-
-        /*
-        Chat chat = chatManager.createChat(SEND_ID + "@" + SERVER_NAME);
+        Chat chat = chatManager.createChat(SEND_ID + "@" + Config.SERVER_NAME);
         try {
             Editable editable = messageEditText.getText();
             String html = Html.toHtml(editable).replace("<p dir=\"ltr\">", "").replace("</p>", "");
-
             chat.sendMessage(html);
-
             list.add(new MessageText(1, editable));
             adapter.notifyDataSetChanged();
             recyclerView.scrollToPosition(adapter.getItemCount() - 1);
@@ -444,40 +354,24 @@ public class MainActivity extends AppCompatActivity {
         } catch (SmackException.NotConnectedException e) {
             e.printStackTrace();
         }
-        */
     }
 
     private void sendImage(String path) {
-        Bundle bundle = new Bundle();
-        bundle.putString("action", "send_image");
-        bundle.putString("sendId", SEND_ID);
-        bundle.putString("path", path);
-
-        Intent intent = new Intent();
-        intent.setAction(SERVICE_ACTION);
-        intent.putExtras(bundle);
-        sendBroadcast(intent);
-
-        /*
         File file = new File(path);
         try {
             FileInputStream inputStream = new FileInputStream(file);
             byte[] data = new byte[inputStream.available()];
             inputStream.read(data);
             inputStream.close();
-
             String string = android.util.Base64.encodeToString(data, 0);
-
-            Chat chat = chatManager.createChat(SEND_ID + "@" + SERVER_NAME);
-            chat.sendMessage(string + BASE64_IMAGE_TAG);
-
+            Chat chat = chatManager.createChat(SEND_ID + "@" + Config.SERVER_NAME);
+            chat.sendMessage(string + Config.BASE64_IMAGE_TAG);
             list.add(new MessageText(1, null, string));
             adapter.notifyDataSetChanged();
             recyclerView.scrollToPosition(adapter.getItemCount() - 1);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        */
     }
 
     private boolean isKeyboardShow() {
@@ -509,45 +403,40 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(receiver);
+
+        Intent serviceIntent = new Intent(MainActivity.this, ImService.class);
+        stopService(serviceIntent);
+    }
+
     BroadcastReceiver receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             Bundle bundle = intent.getExtras();
 
             String action = bundle.getString("action");
-            if (action == "send_text_ok") {
-                Editable editable = messageEditText.getText();
-
-                list.add(new MessageText(1, editable));
-                adapter.notifyDataSetChanged();
-                recyclerView.scrollToPosition(adapter.getItemCount() - 1);
-                messageEditText.setText("");
-            } else if (action == "send_image_ok") {
-                File file = new File(path);
-                try {
-                    FileInputStream inputStream = new FileInputStream(file);
-                    byte[] data = new byte[inputStream.available()];
-                    inputStream.read(data);
-                    inputStream.close();
-
-                    String string = android.util.Base64.encodeToString(data, 0);
-
-                    list.add(new MessageText(1, null, string));
-                    adapter.notifyDataSetChanged();
-                    recyclerView.scrollToPosition(adapter.getItemCount() - 1);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            } else if (action == "receive_ok") {
-                android.os.Message msg = new android.os.Message();
-                msg.what = Config.WHAT_RECEIVE;
-
-                Bundle newBundle = new Bundle();
-                newBundle.putInt("type", bundle.getInt("type"));
-                newBundle.putString("text", bundle.getString("text"));
-
-                msg.setData(newBundle);
-                handler.sendMessage(msg);
+            if (action.equals("login_ok")) {
+                chatManager.addChatListener(new ChatManagerListener() {
+                    @Override
+                    public void chatCreated(Chat chat, boolean b) {
+                        chat.addMessageListener(new ChatMessageListener() {
+                            @Override
+                            public void processMessage(Chat chat, Message message) {
+                                String messageBody = message.getBody();
+                                android.os.Message msg = new android.os.Message();
+                                msg.what = Config.WHAT_RECEIVE;
+                                Bundle bundle = new Bundle();
+                                bundle.putInt("type", 2);
+                                bundle.putString("text", messageBody);
+                                msg.setData(bundle);
+                                handler.sendMessage(msg);
+                            }
+                        });
+                    }
+                });
             }
         }
     };

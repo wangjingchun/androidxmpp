@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.util.Base64;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,9 +41,12 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
     public void onBindViewHolder(@NonNull ViewHolder viewHolder, int i) {
         if (list.get(i).getType() == 1) {
             CharSequence text = list.get(i).getText();
+
             if (text != null) {
                 viewHolder.receiveLayout.setVisibility(View.GONE);
                 viewHolder.sendLayout.setVisibility(View.VISIBLE);
+                viewHolder.sendImage.setVisibility(View.GONE);
+                viewHolder.sendText.setVisibility(View.VISIBLE);
                 viewHolder.sendText.setText(text);
             } else {
                 String image = list.get(i).getImage();
@@ -61,6 +65,8 @@ public class MessageRecyclerViewAdapter extends RecyclerView.Adapter<MessageRecy
             if (text != null) {
                 viewHolder.sendLayout.setVisibility(View.GONE);
                 viewHolder.receiveLayout.setVisibility(View.VISIBLE);
+                viewHolder.receiveImage.setVisibility(View.GONE);
+                viewHolder.receiveText.setVisibility(View.VISIBLE);
                 viewHolder.receiveText.setText(text);
             } else {
                 String image = list.get(i).getImage();
