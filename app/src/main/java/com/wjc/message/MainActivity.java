@@ -63,6 +63,8 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import id.zelory.compressor.Compressor;
+
 public class MainActivity extends AppCompatActivity {
 
     private static String ACTIVITY_ACTION = "ACTIVITY_ACTION";
@@ -91,8 +93,8 @@ public class MainActivity extends AppCompatActivity {
 
     public static ChatManager chatManager;
 
-    private final String USER_ID = "wsh";
-    private final String SEND_ID = "wjc";
+    private final String USER_ID = "wjc";
+    private final String SEND_ID = "wsh";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -359,7 +361,8 @@ public class MainActivity extends AppCompatActivity {
     private void sendImage(String path) {
         File file = new File(path);
         try {
-            FileInputStream inputStream = new FileInputStream(file);
+            File compressFile = new Compressor(MainActivity.this).setQuality(50).compressToFile(file);
+            FileInputStream inputStream = new FileInputStream(compressFile);
             byte[] data = new byte[inputStream.available()];
             inputStream.read(data);
             inputStream.close();

@@ -9,6 +9,15 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+
+        splits {
+            abi {
+                enable true
+                reset()
+                include 'x86', 'x86_64', 'armeabi', 'armeabi-v7a', 'mips', 'mips64', 'arm64-v8a'
+                universalApk false
+            }
+        }
     }
     buildTypes {
         release {
@@ -41,4 +50,5 @@ dependencies {
     implementation 'com.zhihu.android:matisse:0.4.3'
     implementation 'com.squareup.picasso:picasso:2.5.2'
     implementation 'com.github.bumptech.glide:glide:3.7.0'
+    implementation 'id.zelory:compressor:2.1.0'
 }
