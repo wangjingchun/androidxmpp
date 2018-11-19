@@ -70,6 +70,7 @@ public class ImService extends Service {
 
                     ChatManager chatManager = ChatManager.getInstanceFor(connection);
 
+                    MainActivity.connection = connection;
                     MainActivity.chatManager = chatManager;
 
                     Bundle bundle = new Bundle();

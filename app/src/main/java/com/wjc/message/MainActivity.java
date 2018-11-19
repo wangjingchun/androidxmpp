@@ -55,6 +55,7 @@ import org.jivesoftware.smack.chat.ChatManager;
 import org.jivesoftware.smack.chat.ChatManagerListener;
 import org.jivesoftware.smack.chat.ChatMessageListener;
 import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smack.tcp.XMPPTCPConnection;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -91,10 +92,12 @@ public class MainActivity extends AppCompatActivity {
 
     private AssetManager assetManager;
 
+    public static XMPPTCPConnection connection;
     public static ChatManager chatManager;
 
-    private final String USER_ID = "wjc";
-    private final String SEND_ID = "wsh";
+    private String userId;
+    private String sendId;
+    private String password;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,11 +120,21 @@ public class MainActivity extends AppCompatActivity {
                 finish();
             }
         });
-        actionBarTextView = (TextView) actionBarView.findViewById(R.id.actionBarTextView);
-        actionBarTextView.setText(SEND_ID);
 
         assetManager = getResources().getAssets();
 
+        //Intent intent = getIntent();
+        //Bundle bundle = intent.getExtras();
+        //userId = bundle.getString("userId");
+        //sendId = bundle.getString("sendId");
+        //password = bundle.getString("password");
+
+        userId = "wjc";
+        sendId = "wsh";
+        password = "666666";
+
+        actionBarTextView = (TextView) actionBarView.findViewById(R.id.actionBarTextView);
+        actionBarTextView.setText(sendId);
 
         setComponentView();
         setKeyboard();
@@ -130,8 +143,8 @@ public class MainActivity extends AppCompatActivity {
 
         Intent serviceIntent = new Intent(MainActivity.this, ImService.class);
         Bundle serviceBundle = new Bundle();
-        serviceBundle.putString("userName", USER_ID);
-        serviceBundle.putString("password", "666666");
+        serviceBundle.putString("userName", userId);
+        serviceBundle.putString("password", password);
         serviceIntent.putExtras(serviceBundle);
         startService(serviceIntent);
     }
@@ -344,7 +357,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void sendText() {
-        Chat chat = chatManager.createChat(SEND_ID + "@" + Config.SERVER_NAME);
+        Chat chat = chatManager.createChat(sendId + "@" + Config.SERVER_NAME);
         try {
             Editable editable = messageEditText.getText();
             String html = Html.toHtml(editable).replace("<p dir=\"ltr\">", "").replace("</p>", "");
@@ -367,7 +380,7 @@ public class MainActivity extends AppCompatActivity {
             inputStream.read(data);
             inputStream.close();
             String string = android.util.Base64.encodeToString(data, 0);
-            Chat chat = chatManager.createChat(SEND_ID + "@" + Config.SERVER_NAME);
+            Chat chat = chatManager.createChat(sendId + "@" + Config.SERVER_NAME);
             chat.sendMessage(string + Config.BASE64_IMAGE_TAG);
             list.add(new MessageText(1, null, string));
             adapter.notifyDataSetChanged();
@@ -409,6 +422,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
+        if (connection.isConnected()) {
+            connection.disconnect();
+        }
+
         unregisterReceiver(receiver);
 
         Intent serviceIntent = new Intent(MainActivity.this, ImService.class);
